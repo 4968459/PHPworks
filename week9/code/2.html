@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.bootcss.com/axios/0.19.2/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <style>
+    body {
+      text-align: center;
+    }
+
+    input {
+      height: 20px;
+      width: 150px;
+    }
+
+    button {
+      width: 100px;
+      height: 30px;
+      color: #fff;
+      background-color: lightcoral;
+      border: 0;
+    }
+
+    table {
+      width: 500px;
+    }
+
+    table td {
+      height: 50px;
+    }
+
+    table th {
+      background-color: lightcyan;
+
+    }
+  </style>
+  <title>实现增删改查</title>
+</head>
+
+<body>
+  <div id="app">
+    <button @click='selectAll()'>查询全部数据</button>
+    <br>
+    <h5>输入用户名查询记录</h5>
+    用户名：<input type="text" maxlength="10" id="selectUername" name="username">
+    <button id="select">查询记录</button>
+
+    <br><br>
+    <h5>输入ID删除该记录</h5>
+    ID：<input type="text" maxlength="2" id="deleteUsername" name="username">
+    <button type="submit" id="delete">删除记录</button>
+    <br><br>
+    <h5>输入信息添加记录</h5>
+    用户名：<input type="text" maxlength="10" id="insertUsername" name="username">
+    密码：<input type="password" maxlength="20" name="password" id="insertPassword">
+    <button type="submit" id="insert">增加记录</button>
+    <br><br>
+    <h5>输入ID信息修改记录</h5>
+    id：<input type="number" maxlength="2" name="uid" id="updateId">
+    用户名：<input type="text" maxlength="10" name="username" id="updateUsername">
+    密码：<input type="password" name="password" maxlength="20" id="updatePassword">
+    <button type="submit" id="update">更新记录</button>
+    <br><br>
+    <hr>
+    <div style="width: 600px;height: 300px; margin: 0 auto;">
+      <table border='1' align="center">
+        <tr>
+          <th>ID</th>
+          <th>用户名</th>
+          <th>密码</th>
+        </tr>
+        <tr v-for="item in selectInfo" :key="item.ID">
+          <td>{{item.ID}}</td>
+          <td>{{item.username}}</td>
+          <td>{{item.password}}</td>
+        </tr>
+      </table>
+
+    </div>
+
+  </div>
+
+  <script>
+    const Vue1 = new Vue({
+      el: '#app',
+      data: {
+        selectInfo: []
+      },
+      created() {
+        this.selectAll()
+      },
+      methods: {
+        selectAll() {
+          // 查询全部
+          axios.get('2.php?action=all').then((ret) => {
+            this.selectInfo = ret.data.users
+          })
+        }
+      },
+    })
+  </script>
+  <script>
+    // 查询
+    axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+    $('#select').click(() => {
+      selectUsername = $('#selectUername').val()
+      axios.get(`2.php/?action=select&username=${selectUsername}`).then((ret) => {
+        $("#tips").html(JSON.stringify(ret.data))
+        console.log(ret.data.users);
+        Vue1.selectInfo = ret.data.users
+      })
+    })
+    // 修改
+    $('#update').click(() => {
+      updateID = $('#updateId').val()
+      updateUsername = $('#updateUsername').val()
+      updatePassword = $('#updatePassword').val()
+
+      let postDataupdate = new FormData();
+      postDataupdate.append('updateUsername', updateUsername);
+      postDataupdate.append('updatePassword', updatePassword);
+      postDataupdate.append('updateID', updateID)
+
+      axios.post(`2.php/?action=update`, postDataupdate).then((ret) => {
+        $("#tips").html(JSON.stringify(ret.data))
+        console.log(ret);
+        Vue1.selectAll()
+      })
+
+    })
+    // 删除
+    $('#delete').click(() => {
+      deleteUsername = $('#deleteUsername').val()
+      axios.get(`2.php/?action=delete&id=${deleteUsername}`).then((ret) => {
+        $("#tips").html(JSON.stringify(ret.data))
+        Vue1.selectAll()
+        console.log(ret);
+      })
+    })
+    // 插入
+    $('#insert').click(() => {
+      insertUsername = $('#insertUsername').val()
+      insertPassword = $('#insertPassword').val()
+
+      let postDataInsert = new FormData();
+      postDataInsert.append('insertUsername', insertUsername);
+      postDataInsert.append('insertPassword', insertPassword);
+
+      axios.post(`2.php/?action=insert`, postDataInsert).then((ret) => {
+        $("#tips").html(JSON.stringify(ret.data))
+        Vue1.selectAll()
+        console.log(ret);
+      })
+    })
+    // 全部取消智能输入提示
+    console.log($('input'))
+    $('input').attr("autocomplete", "off")
+  </script>
+</body>
+
+</html>
